@@ -195,7 +195,10 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             a, b = None, None
 
             for action in state.getLegalActions(0):
-                value = max(value,minValue(state.generateSuccessor(0, action), 1, 1, a, b))
+                if value is None:
+                    value = minValue(state.generateSuccessor(0, action), 1, 1, a, b)
+                else:
+                    value = max(value, minValue(state.generateSuccessor(0, action), 1, 1, a, b))
                 if a is None:
                     a = value
                     bestAction = action
@@ -231,10 +234,16 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             value = None
             for action in state.getLegalActions(agentIdx):
                 succ = minValue(state.generateSuccessor(agentIdx, action), agentIdx + 1, depth, a, b)
-                value = max(value, succ)
+                if value is None:
+                    value = succ
+                else:
+                    value = max(value, succ)
                 if b is not None and value > b:
                     return value
-                a = max(a, value)
+                if a is None:
+                    a = value
+                else:
+                    a = max(a, value)
             if value is not None:
                 return value
             else:
@@ -257,7 +266,34 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def expectimax_search(state, agentIndex, depth):
+            if agentIndex == state.getNumAgents():
+                # nếu đạt đến độ sâu tối đa, đánh giá trạng thái
+                if depth == self.depth:
+                    return self.evaluationFunction(state)
+                # nếu không, hãy bắt đầu lớp tối đa mới với độ sâu lớn hơn
+                else:
+                    return expectimax_search(state, 0, depth + 1)
+            # if not min layer and last ghost
+            else:
+                moves = state.getLegalActions(agentIndex)
+                # nếu không thể làm được gì, đánh giá trạng thái
+                if len(moves) == 0:
+                    return self.evaluationFunction(state)
+                # nhận tất cả các giá trị minimax cho lớp tiếp theo với mỗi nút là trạng thái có thể có sau khi di chuyển
+                next = (expectimax_search(state.generateSuccessor(agentIndex, m), agentIndex + 1, depth) for m in moves)
+
+                # if max layer, return max of layer below
+                if agentIndex == 0:
+                    return max(next)
+                # if min layer, return expectimax values
+                else:
+                    l = list(next)
+                    return sum(l) / len(l)
+        # chọn hành động có giá trị tối thiểu lớn nhất
+        result = max(gameState.getLegalActions(0), key=lambda x: expectimax_search(gameState.generateSuccessor(0, x), 1, 1))
+
+        return result
 
 def betterEvaluationFunction(currentGameState):
     """
