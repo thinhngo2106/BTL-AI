@@ -19,6 +19,7 @@ Pacman agents (in searchAgents.py).
 
 import util
 
+
 class SearchProblem:
     """
     This class outlines the structure of a search problem, but doesn't implement
@@ -70,7 +71,8 @@ def tinyMazeSearch(problem):
     from game import Directions
     s = Directions.SOUTH
     w = Directions.WEST
-    return  [s, s, w, s, w, w, s, w]
+    return [s, s, w, s, w, w, s, w]
+
 
 def depthFirstSearch(problem):
     """
@@ -111,41 +113,42 @@ def depthFirstSearch(problem):
                 path = current_action + [action]
                 stack.push((adjacent, path))
     return res
-    # print(res)
-    util.raiseNotDefined()
+
+
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
     fringe = util.Queue()
-    fringe.push( (problem.getStartState(), [], []) )
+    fringe.push((problem.getStartState(), [], []))
     expanded = []
 
     while not fringe.isEmpty():
         node, actions, curCost = fringe.pop()
 
-        if(not node in expanded):
+        if (not node in expanded):
             expanded.append(node)
 
             if problem.isGoalState(node):
                 return actions
 
             for child, direction, cost in problem.getSuccessors(node):
-                fringe.push((child, actions+[direction], curCost + [cost]))
+                fringe.push((child, actions + [direction], curCost + [cost]))
 
     return []
+
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
     priority_queue = util.PriorityQueue()
-    priority_queue.update( (problem.getStartState(), [], 0), 0 )
+    priority_queue.update((problem.getStartState(), [], 0), 0)
     expanded = []
 
     while not priority_queue.isEmpty():
         node, actions, totalCost = priority_queue.pop()
 
-        if(not node in expanded):
+        if (not node in expanded):
             expanded.append(node)
 
             if problem.isGoalState(node):
@@ -156,6 +159,7 @@ def uniformCostSearch(problem):
 
     return []
 
+
 def nullHeuristic(state, problem=None):
     """
     A heuristic function estimates the cost from the current state to the nearest
@@ -163,19 +167,20 @@ def nullHeuristic(state, problem=None):
     """
     return 0
 
+
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
     visited = []
     res = []
-    
+
     priority_queue = util.PriorityQueue()
     start = (problem.getStartState(), [], 0)
     priority_queue.update(start, 0)
 
     while not priority_queue.isEmpty():
         state, path, cost = priority_queue.pop()
-        
+
         if problem.isGoalState(state):
             res = path
             break
@@ -188,8 +193,8 @@ def aStarSearch(problem, heuristic=nullHeuristic):
                 new_path = path + [action]
                 new_cost = cost + weight
                 new_node = (adjacent, new_path, new_cost)
-                priority_queue.update(new_node, new_cost+heuristic(adjacent, problem))
-    
+                priority_queue.update(new_node, new_cost + heuristic(adjacent, problem))
+
     return res
     util.raiseNotDefined()
 

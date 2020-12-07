@@ -153,24 +153,25 @@ class MinimaxAgent(MultiAgentSearchAgent):
         "*** YOUR CODE HERE ***"
         numAgents = gameState.getNumAgents()
         scores = []
-        def _minimax(s, iterCount):
-          if iterCount >= self.depth*numAgents or s.isWin() or s.isLose():
-            return self.evaluationFunction(s)
-          if iterCount%numAgents != 0:    #is ghost
-            result = 10**10
-            for action in s.getLegalActions(iterCount%numAgents):
-              successors = s.generateSuccessor(iterCount%numAgents, action)
+
+        def _minimax(state, iterCount):
+          if iterCount >= self.depth*numAgents or state.isWin() or state.isLose():
+            return self.evaluationFunction(state)
+          if iterCount % numAgents != 0:
+            result = 1e6
+            for action in state.getLegalActions(iterCount%numAgents):
+              successors = state.generateSuccessor(iterCount%numAgents, action)
               result = min(result, _minimax(successors, iterCount+1))
             return result
-          else:   #is Pacman
-            result = -10**10
-            for action in s.getLegalActions(iterCount%numAgents):
-              successors = s.generateSuccessor(iterCount%numAgents, action)
+          else:
+            result = -1e6
+            for action in state.getLegalActions(iterCount%numAgents):
+              successors = state.generateSuccessor(iterCount%numAgents, action)
               result = max(result, _minimax(successors, iterCount+1))
               if iterCount == 0:
                 scores.append(result)
             return result
-        result = _minimax(gameState, 0)
+        _minimax(gameState, 0)
         return gameState.getLegalActions(0)[scores.index(max(scores))]
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
@@ -273,7 +274,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
                 averageScore = sum([float(x) / len(successorScore) for x in successorScore])
                 return averageScore
             else:  # is Pacman
-                result = -10 ** 10
+                result = -1e6
                 for a in s.getLegalActions(iterCount % numAgents):
                     new_gameState = s.generateSuccessor(iterCount % numAgents, a)
                     result = max(result, _expectMinimax(new_gameState, iterCount + 1))
@@ -281,7 +282,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
                         ActionScore.append(result)
                 return result
 
-        result = _expectMinimax(gameState, 0)
+        _expectMinimax(gameState, 0)
         return gameState.getLegalActions(0)[ActionScore.index(max(ActionScore))]
 
 def betterEvaluationFunction(currentGameState):
