@@ -151,34 +151,27 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        def minimax_search(state, agentIndex, depth):
-            # if in min layer and last ghost
-            if agentIndex == state.getNumAgents():
-                # if reached max depth, evaluate state
-                if depth == self.depth:
-                    return self.evaluationFunction(state)
-                # otherwise start new max layer with bigger depth
-                else:
-                    return minimax_search(state, 0, depth + 1)
-            # if not min layer and last ghost
-            else:
-                moves = state.getLegalActions(agentIndex)
-                # if nothing can be done, evaluate the state
-                if len(moves) == 0:
-                    return self.evaluationFunction(state)
-                # get all the minimax values for the next layer with each node being a possible state after a move
-                next = (minimax_search(state.generateSuccessor(agentIndex, m), agentIndex + 1, depth) for m in moves)
-
-                # if max layer, return max of layer below
-                if agentIndex == 0:
-                    return max(next)
-                # if min layer, return min of layer below
-                else:
-                    return min(next)
-        # select the action with the greatest minimax value
-        result = max(gameState.getLegalActions(0), key=lambda x: minimax_search(gameState.generateSuccessor(0, x), 1, 1))
-
-        return result
+        numAgents = gameState.getNumAgents()
+        scores = []
+        def _minimax(s, iterCount):
+          if iterCount >= self.depth*numAgents or s.isWin() or s.isLose():
+            return self.evaluationFunction(s)
+          if iterCount%numAgents != 0:    #is ghost
+            result = 10**10
+            for action in s.getLegalActions(iterCount%numAgents):
+              successors = s.generateSuccessor(iterCount%numAgents, action)
+              result = min(result, _minimax(successors, iterCount+1))
+            return result
+          else:   #is Pacman
+            result = -10**10
+            for action in s.getLegalActions(iterCount%numAgents):
+              successors = s.generateSuccessor(iterCount%numAgents, action)
+              result = max(result, _minimax(successors, iterCount+1))
+              if iterCount == 0:
+                scores.append(result)
+            return result
+        result = _minimax(gameState, 0)
+        return gameState.getLegalActions(0)[scores.index(max(scores))]
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
@@ -266,34 +259,30 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        def expectimax_search(state, agentIndex, depth):
-            if agentIndex == state.getNumAgents():
-                # nếu đạt đến độ sâu tối đa, đánh giá trạng thái
-                if depth == self.depth:
-                    return self.evaluationFunction(state)
-                # nếu không, hãy bắt đầu lớp tối đa mới với độ sâu lớn hơn
-                else:
-                    return expectimax_search(state, 0, depth + 1)
-            # if not min layer and last ghost
-            else:
-                moves = state.getLegalActions(agentIndex)
-                # nếu không thể làm được gì, đánh giá trạng thái
-                if len(moves) == 0:
-                    return self.evaluationFunction(state)
-                # nhận tất cả các giá trị minimax cho lớp tiếp theo với mỗi nút là trạng thái có thể có sau khi di chuyển
-                next = (expectimax_search(state.generateSuccessor(agentIndex, m), agentIndex + 1, depth) for m in moves)
+        numAgents = gameState.getNumAgents()
+        ActionScore = []
+        def _expectMinimax(s, iterCount):
+            if iterCount >= self.depth * numAgents or s.isWin() or s.isLose():  # leaf node
+                return self.evaluationFunction(s)
+            if iterCount % numAgents != 0:  # is Ghost
+                successorScore = []
+                for a in s.getLegalActions(iterCount % numAgents):
+                    new_gameState = s.generateSuccessor(iterCount % numAgents, a)
+                    result = _expectMinimax(new_gameState, iterCount + 1)
+                    successorScore.append(result)
+                averageScore = sum([float(x) / len(successorScore) for x in successorScore])
+                return averageScore
+            else:  # is Pacman
+                result = -10 ** 10
+                for a in s.getLegalActions(iterCount % numAgents):
+                    new_gameState = s.generateSuccessor(iterCount % numAgents, a)
+                    result = max(result, _expectMinimax(new_gameState, iterCount + 1))
+                    if iterCount == 0:
+                        ActionScore.append(result)
+                return result
 
-                # if max layer, return max of layer below
-                if agentIndex == 0:
-                    return max(next)
-                # if min layer, return expectimax values
-                else:
-                    l = list(next)
-                    return sum(l) / len(l)
-        # chọn hành động có giá trị tối thiểu lớn nhất
-        result = max(gameState.getLegalActions(0), key=lambda x: expectimax_search(gameState.generateSuccessor(0, x), 1, 1))
-
-        return result
+        result = _expectMinimax(gameState, 0)
+        return gameState.getLegalActions(0)[ActionScore.index(max(ActionScore))]
 
 def betterEvaluationFunction(currentGameState):
     """
