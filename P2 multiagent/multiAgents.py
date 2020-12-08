@@ -162,12 +162,14 @@ class MinimaxAgent(MultiAgentSearchAgent):
           if iterCount % numAgents != 0: #is Ghost min
             result = 1e10
             for action in state.getLegalActions(iterCount % numAgents):
+               #state with iteration count
               successors = state.generateSuccessor(iterCount % numAgents, action)
               result = min(result, _minimax(successors, iterCount+1))
             return result
           else:     #is Pacman max
             result = -1e10
             for action in state.getLegalActions(iterCount % numAgents):
+                #state iteration count
               successors = state.generateSuccessor(iterCount % numAgents, action)
               result = max(result, _minimax(successors, iterCount+1))
               if iterCount == 0:
@@ -276,6 +278,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             if iterCount % numAgents != 0: #is ghost min
                 successorScore = []
                 for a in s.getLegalActions(iterCount % numAgents):
+                    # state with iteration count
                     new_gameState = s.generateSuccessor(iterCount % numAgents, a)
                     result = _expectMinimax(new_gameState, iterCount + 1)
                     successorScore.append(result)
@@ -285,6 +288,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             else: #is pacman max
                 result = -1e10
                 for a in s.getLegalActions(iterCount % numAgents):
+                    # state with iteration count
                     new_gameState = s.generateSuccessor(iterCount % numAgents, a)
                     result = max(result, _expectMinimax(new_gameState, iterCount + 1))
                     if iterCount == 0:
