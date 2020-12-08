@@ -305,8 +305,10 @@ def betterEvaluationFunction(currentGameState):
     #hunting ghosts when eating the wrath.
     def _ghostHunting(gameState):
       score = 0
+      #find ghost
       for ghost in gameState.getGhostStates():
         disGhost = manhattanDistance(gameState.getPacmanPosition(), ghost.getPosition())
+        #if pacman is fury time
         if ghost.scaredTimer > 0:
           score += pow(max(8 - disGhost, 0), 2)
         else:
@@ -316,8 +318,10 @@ def betterEvaluationFunction(currentGameState):
     #search for the nearest food
     def _foodGobbling(gameState):
       disFood = []
+      #create list food distance
       for food in gameState.getFood().asList():
         disFood.append(1.0/manhattanDistance(gameState.getPacmanPosition(), food))
+      #find min distance food because disFood is list of fractions
       if len(disFood)>0:
         return max(disFood)
       else:
@@ -326,8 +330,10 @@ def betterEvaluationFunction(currentGameState):
     #Find the nearest fury ball
     def _pelletNabbing(gameState):
       score = []
+      #create list score
       for Cap in gameState.getCapsules():
         score.append(50.0/manhattanDistance(gameState.getPacmanPosition(), Cap))
+    #find max score
       if len(score) > 0:
         return max(score)
       else:
