@@ -74,6 +74,7 @@ class ReflexAgent(Agent):
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
+        #find position of cloest ghost
         closestghost = min([manhattanDistance(newPos, ghost.getPosition()) for ghost in newGhostStates])
 
         if closestghost:
@@ -155,23 +156,24 @@ class MinimaxAgent(MultiAgentSearchAgent):
         scores = []
 
         def _minimax(state, iterCount):
+            # if reached depth or win or lose, evaluate state
           if iterCount >= self.depth*numAgents or state.isWin() or state.isLose():
             return self.evaluationFunction(state)
-          if iterCount % numAgents != 0:
-            result = 1e6
-            for action in state.getLegalActions(iterCount%numAgents):
-              successors = state.generateSuccessor(iterCount%numAgents, action)
+          if iterCount % numAgents != 0: #is Ghost min
+            result = 1e10
+            for action in state.getLegalActions(iterCount % numAgents):
+              successors = state.generateSuccessor(iterCount % numAgents, action)
               result = min(result, _minimax(successors, iterCount+1))
             return result
-          else:
-            result = -1e6
-            for action in state.getLegalActions(iterCount%numAgents):
-              successors = state.generateSuccessor(iterCount%numAgents, action)
+          else:     #is Pacman max
+            result = -1e10
+            for action in state.getLegalActions(iterCount % numAgents):
+              successors = state.generateSuccessor(iterCount % numAgents, action)
               result = max(result, _minimax(successors, iterCount+1))
               if iterCount == 0:
                 scores.append(result)
             return result
-        _minimax(gameState, 0)
+        result = _minimax(gameState, 0)
         return gameState.getLegalActions(0)[scores.index(max(scores))]
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
@@ -186,8 +188,9 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         "*** YOUR CODE HERE ***"
         def alphabeta(state):
             value, bestAction = None, None
+            #a is the best value that the maximizer currently can guarantee at that level or above.
+            #b is the best value that the minimizer currently can guarantee at that level or above.
             a, b = None, None
-
             for action in state.getLegalActions(0):
                 if value is None:
                     value = minValue(state.generateSuccessor(0, action), 1, 1, a, b)
@@ -199,11 +202,14 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                 else:
                     a, bestAction = max(value, a), action if value > a else bestAction
             return bestAction
-
+        #min value
         def minValue(state, agentIdx, depth, a, b):
+            #if the last index agent, max value
             if agentIdx == state.getNumAgents():
                 return maxValue(state, 0, depth + 1, a, b)
+            #else
             value = None
+            #calculate score for each possible action by recursively calling min_agent
             for action in state.getLegalActions(agentIdx):
                 succ = minValue(state.generateSuccessor(agentIdx, action), agentIdx + 1, depth, a, b)
                 if value is None:
@@ -223,9 +229,11 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
 
         def maxValue(state, agentIdx, depth, a, b):
+            #if depth, evaluation state
             if depth > self.depth:
                 return self.evaluationFunction(state)
             value = None
+            # calculate score for each possible action by recursively calling min_agent
             for action in state.getLegalActions(agentIdx):
                 succ = minValue(state.generateSuccessor(agentIdx, action), agentIdx + 1, depth, a, b)
                 if value is None:
@@ -265,7 +273,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         def _expectMinimax(s, iterCount):
             if iterCount >= self.depth * numAgents or s.isWin() or s.isLose():  # leaf node
                 return self.evaluationFunction(s)
-            if iterCount % numAgents != 0:  # is Ghost
+            if iterCount % numAgents != 0: #is ghost min
                 successorScore = []
                 for a in s.getLegalActions(iterCount % numAgents):
                     new_gameState = s.generateSuccessor(iterCount % numAgents, a)
@@ -273,8 +281,9 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
                     successorScore.append(result)
                 averageScore = sum([float(x) / len(successorScore) for x in successorScore])
                 return averageScore
-            else:  # is Pacman
-                result = -1e6
+            #if iterCount == numAgents, is pacman
+            else: #is pacman max
+                result = -1e10
                 for a in s.getLegalActions(iterCount % numAgents):
                     new_gameState = s.generateSuccessor(iterCount % numAgents, a)
                     result = max(result, _expectMinimax(new_gameState, iterCount + 1))
@@ -282,7 +291,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
                         ActionScore.append(result)
                 return result
 
-        _expectMinimax(gameState, 0)
+        result = _expectMinimax(gameState, 0)
         return gameState.getLegalActions(0)[ActionScore.index(max(ActionScore))]
 
 def betterEvaluationFunction(currentGameState):
@@ -293,6 +302,7 @@ def betterEvaluationFunction(currentGameState):
     DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
+    #hunting ghosts when eating the wrath.
     def _ghostHunting(gameState):
       score = 0
       for ghost in gameState.getGhostStates():
@@ -303,6 +313,7 @@ def betterEvaluationFunction(currentGameState):
           score -= pow(max(7 - disGhost, 0), 2)
       return score
 
+    #search for the nearest food
     def _foodGobbling(gameState):
       disFood = []
       for food in gameState.getFood().asList():
@@ -312,6 +323,7 @@ def betterEvaluationFunction(currentGameState):
       else:
         return 0
 
+    #Find the nearest fury ball
     def _pelletNabbing(gameState):
       score = []
       for Cap in gameState.getCapsules():
