@@ -19,7 +19,6 @@ Pacman agents (in searchAgents.py).
 
 import util
 
-
 class SearchProblem:
     """
     This class outlines the structure of a search problem, but doesn't implement
@@ -71,8 +70,7 @@ def tinyMazeSearch(problem):
     from game import Directions
     s = Directions.SOUTH
     w = Directions.WEST
-    return [s, s, w, s, w, w, s, w]
-
+    return  [s, s, w, s, w, w, s, w]
 
 def depthFirstSearch(problem):
     """
@@ -89,76 +87,102 @@ def depthFirstSearch(problem):
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
     "*** YOUR CODE HERE ***"
-    visit = []
+    from util import Stack
+    stack = Stack()
+    visited = []
     actions = []
-    stack = util.Stack()
+    cost = 0
 
     begin_state = problem.getStartState()
-    stack.push((begin_state, actions))
+    stack.push((begin_state, actions, cost))
 
     while not stack.isEmpty():
-        current_state, current_action = stack.pop()
+        cur_state, cur_action, cur_cost = stack.pop()
 
-        # Break if hit the goal state
-        if problem.isGoalState(current_state):
-            res = current_action
+        # Check if it get to the goal state
+        if problem.isGoalState(cur_state):
+            return cur_action
             break
 
-        # Find all adjacents and push them into stack
-        if current_state not in visit:
-            visit.append(current_state)
-            successors = problem.getSuccessors(current_state)
+        # Check if the node is visited (Find all the adjacents)
+        # If not, add it to the stack
+        if cur_state not in visited:
+            visited.append(cur_state)
+            successors = problem.getSuccessors(cur_state)
             for successor in successors:
-                adjacent, action, _ = successor
-                path = current_action + [action]
-                stack.push((adjacent, path))
-    return res
+                if successor[0] not in visited:
+                    adjacent, action, _cost = successor
+                    path = cur_action + [action]
+                    new_cost = cur_cost + _cost
+                    stack.push((adjacent, path, new_cost))
 
+    util.raiseNotDefined()
 
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    fringe = util.Queue()
-    fringe.push((problem.getStartState(), [], []))
-    expanded = []
+    from util import Queue
+    queue = Queue()
+    visited = []
+    actions = []
+    cost = 0
 
-    while not fringe.isEmpty():
-        node, actions, curCost = fringe.pop()
+    begin_state = problem.getStartState()
+    queue.push((begin_state, actions, cost))
 
-        if (not node in expanded):
-            expanded.append(node)
+    while not queue.isEmpty():
+        cur_state, cur_action, cur_cost = queue.pop()
 
-            if problem.isGoalState(node):
-                return actions
+        # Check if it get to the goal state
+        if problem.isGoalState(cur_state):
+            return cur_action
+            break
 
-            for child, direction, cost in problem.getSuccessors(node):
-                fringe.push((child, actions + [direction], curCost + [cost]))
+        # Check if the node is visited (Find all the adjacents)
+        # If not, add it to the queue
+        if cur_state not in visited:
+            visited.append(cur_state)
+            successors = problem.getSuccessors(cur_state)
+            for successor in successors:
+                if successor[0] not in visited:
+                    adjacent, action, _cost = successor
+                    path = cur_action + [action]
+                    new_cost = cur_cost + _cost
+                    queue.push((adjacent, path, new_cost))
 
-    return []
-
+    util.raiseNotDefined()
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    priority_queue = util.PriorityQueue()
-    priority_queue.update((problem.getStartState(), [], 0), 0)
-    expanded = []
+    from util import PriorityQueue
+    pri_queue = PriorityQueue()
+    visited = []
+    actions = []
+    cost = 0
 
-    while not priority_queue.isEmpty():
-        node, actions, totalCost = priority_queue.pop()
+    begin_state = problem.getStartState()
+    pri_queue.update((begin_state, actions, cost), 0) # Priority queue requires a priority number come up with every node in the graph
 
-        if (not node in expanded):
-            expanded.append(node)
+    while not pri_queue.isEmpty():
+        cur_state, cur_action, cur_cost = pri_queue.pop()
 
-            if problem.isGoalState(node):
-                return actions
+        if problem.isGoalState(cur_state):
+            return cur_action
+            break
 
-            for child, direction, cost in problem.getSuccessors(node):
-                priority_queue.update((child, actions + [direction], totalCost + cost), totalCost + cost)
+        if cur_state not in visited:
+            visited.append(cur_state)
+            successors = problem.getSuccessors(cur_state)
+            for successor in successors:
+                if successor[0] not in visited:
+                    adjacent, action, _cost = successor
+                    path = cur_action + [action]
+                    new_cost = cur_cost + _cost
+                    pri_queue.update((adjacent, path, new_cost), new_cost)
 
-    return []
-
+    util.raiseNotDefined()
 
 def nullHeuristic(state, problem=None):
     """
@@ -167,13 +191,11 @@ def nullHeuristic(state, problem=None):
     """
     return 0
 
-
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    visited = []
     res = []
-
+    visited = []
     priority_queue = util.PriorityQueue()
     start = (problem.getStartState(), [], 0)
     priority_queue.update(start, 0)
